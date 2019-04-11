@@ -11,3 +11,4 @@ Note :
 - suit : chất bài
 - straight : dây (liêng)
 - set : bộ (sáp)
+- hand : những lá bài được chia (cầm trên tay)
