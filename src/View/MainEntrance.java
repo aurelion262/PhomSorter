@@ -20,6 +20,7 @@ public class MainEntrance {
         CountPhomLogic countPhomLogic = new CountPhomLogic();
         String option, temp;
         Scanner sc = new Scanner(System.in);
+        int sophom=0;
         do
         {
             System.out.println("=====================");
@@ -51,7 +52,8 @@ public class MainEntrance {
                 countPhomLogic.printHand(myCards);
                 System.out.println("");            
 
-                System.out.println("===> Trong tay bạn có " + countPhomLogic.countPhom(myCards) + " phỏm");
+                sophom = countPhomLogic.countPhom(myCards);
+                System.out.println("===> Trong tay bạn có " + sophom + " phỏm");
                 System.out.println("");
                 
                 System.out.println("Bài sau khi đã sắp xếp : ");
@@ -73,7 +75,7 @@ public class MainEntrance {
                 System.out.println("");
             }
         }
-        while(!option.equals("0"));
+        while(option!="0");
     }
    
     

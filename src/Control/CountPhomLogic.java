@@ -17,8 +17,6 @@ import java.util.Iterator;
  */
 public class CountPhomLogic {
     
-    private ArrayList<Card> deck;
-    
     public ArrayList<Card> getRandomHand()
     {
         ArrayList<Card> hand = new ArrayList<>();
@@ -194,11 +192,10 @@ public class CountPhomLogic {
             }
         }        
         
-        //Đếm và lưu các dây
-        ArrayList<ArrayList<Card>> straights1 = new ArrayList<>(); 
+        //Đếm và lưu tạm các dây (chưa chính thức)
+        ArrayList<ArrayList<Card>> straights1 = new ArrayList<>();         
         sortHandBySuitThenValue(hand);
         currentValue = hand.get(0).getValue();
-//        boolean aceAdded = false;
         int currentSuit = hand.get(0).getSuit(), currentStraightLength=1;
         for(int i=1;i<hand.size();i++)
         {
@@ -237,31 +234,24 @@ public class CountPhomLogic {
             }
         }
         
-        // Tách dây to thành các dây nhỏ ( vd: 1,2,3,4,5,6 -> 1,2,3 và 4,5,6 )
-        Iterator<ArrayList<Card>> straights1Iter = straights1.listIterator();
-        ArrayList<ArrayList<Card>> straights1ToAdd = new ArrayList<>();
-        while(straights1Iter.hasNext())
-        {
-            ArrayList<Card> straight = straights1Iter.next();
-            Iterator<Card> straightIter = straight.listIterator();
-            while(straight.size()/3>1)
-            {
-                ArrayList<Card> tempStraight = new ArrayList<>();
-                for(int i=1;i<=3 && straightIter.hasNext();i++)
-                {
-                    Card cStraight = straightIter.next();
-                    tempStraight.add(cStraight);
-                    straightIter.remove();
-                }
-                straights1ToAdd.add(tempStraight);
-            }
-        }
-        straights1.addAll(straights1ToAdd);
+//        for(ArrayList<Card> straight : straights1)
+//        {
+//            System.out.println("Dây hiện tại : ");
+//            printHand(straight);
+//            System.out.println("");
+//        }
+//        
+//        for(ArrayList<Card> set : sets1)
+//        {
+//            System.out.println("Bộ hiện tại : ");
+//            printHand(set);
+//            System.out.println("");
+//        }
         
         //Tìm những lá bài đang được dùng chung cho cả dây và bộ và quyết định lá bài đó sẽ dùng cho dây hay bộ
         int numberOfStraightsWillGetIfDeleteThisSet = 0, numberOfSetsWillGetIfDeleteThisStraight = 0;
         boolean deleteStraight=false;
-        straights1Iter = straights1.listIterator();
+        Iterator<ArrayList<Card>> straights1Iter = straights1.listIterator();
         while(straights1Iter.hasNext())
         {
             ArrayList<Card> straight = straights1Iter.next();
@@ -331,11 +321,97 @@ public class CountPhomLogic {
             }
         } 
         
-        // Loại các phần tử thừa của dây ( vd: dây 1,3,4,5 sẽ bỏ 1 )
-        straights1Iter = straights1.listIterator();
-        while(straights1Iter.hasNext())
+        // Đếm và lưu dây lần 2
+        ArrayList<Card> copyHand = new ArrayList<>();
+        copyHand.addAll(hand);
+        for(ArrayList<Card> set : sets1)
         {
-            ArrayList<Card> straight = straights1Iter.next();
+            for(Card c : set)
+            {
+                removeThisCardFromThisHand(copyHand, c);
+            }
+        }
+        
+        ArrayList<ArrayList<Card>> straights1_official = new ArrayList<>();
+        currentValue = copyHand.get(0).getValue();
+        currentSuit = copyHand.get(0).getSuit();
+        currentStraightLength=1;
+        for(int i=1;i<copyHand.size();i++)
+        {            
+            if(copyHand.get(i).getSuit()!=currentSuit || copyHand.get(i).getValue()!=currentValue+1)
+            {
+                if(currentStraightLength>=3)
+                {
+                    ArrayList<Card> straight = new ArrayList<>();
+                    for(int j=i-currentStraightLength;j<=i-1;j++)
+                    {
+                        straight.add(copyHand.get(j));
+                    }
+                    straights1_official.add(straight);
+                }
+                currentValue = copyHand.get(i).getValue();
+                currentSuit = copyHand.get(i).getSuit();
+                currentStraightLength = 1;
+            }
+            if(copyHand.get(i).getValue()==currentValue+1 && copyHand.get(i).getSuit() == currentSuit)
+            {
+                currentValue = copyHand.get(i).getValue();
+                currentStraightLength++;
+            }
+            if(i==copyHand.size()-1)
+            {
+                if(currentStraightLength>=3)
+                {
+                    ArrayList<Card> straight = new ArrayList<>();
+                    for(int j=i+1-currentStraightLength;j<=i;j++)
+                    {
+                        straight.add(copyHand.get(j));
+                    }
+                    straights1_official.add(straight);
+                }
+            }
+        }
+        
+        // Tách dây to thành các dây nhỏ ( vd: 1,2,3,4,5,6 -> 1,2,3 và 4,5,6 )
+        Iterator<ArrayList<Card>> straights1_officialIter = straights1_official.listIterator();
+        ArrayList<ArrayList<Card>> straights1_officialToAdd = new ArrayList<>();
+        while(straights1_officialIter.hasNext())
+        {
+            ArrayList<Card> straight = straights1_officialIter.next();
+            Iterator<Card> straightIter = straight.listIterator();
+            while(straight.size()/3>1)
+            {
+                ArrayList<Card> tempStraight = new ArrayList<>();
+                for(int i=1;i<=3 && straightIter.hasNext();i++)
+                {
+                    Card cStraight = straightIter.next();
+                    tempStraight.add(cStraight);
+                    straightIter.remove();
+                }
+                straights1_officialToAdd.add(tempStraight);
+            }
+        }
+        straights1_official.addAll(straights1_officialToAdd);
+        
+//        for(ArrayList<Card> straight : straights1)
+//        {
+//            System.out.println("Dây hiện tại : ");
+//            printHand(straight);
+//            System.out.println("");
+//        }
+//        
+//        for(ArrayList<Card> set : sets1)
+//        {
+//            System.out.println("Bộ hiện tại : ");
+//            printHand(set);
+//            System.out.println("");
+//        }
+        
+        // Loại các phần tử thừa của dây ( vd: dây 1,3,4,5 sẽ bỏ 1 )
+        straights1_officialIter = straights1_official.listIterator();
+        while(straights1_officialIter.hasNext())
+        {
+            ArrayList<Card> straight = straights1_officialIter.next();
             Iterator<Card> straightIter = straight.listIterator();
             while(straightIter.hasNext())
             {
@@ -352,6 +428,20 @@ public class CountPhomLogic {
                 }
             }
         }
+        
+//        for(ArrayList<Card> straight : straights1)
+//        {
+//            System.out.println("Dây hiện tại : ");
+//            printHand(straight);
+//            System.out.println("");
+//        }
+//        
+//        for(ArrayList<Card> set : sets1)
+//        {
+//            System.out.println("Bộ hiện tại : ");
+//            printHand(set);
+//            System.out.println("");
+//        }
         
         //*****************************************************************************************************************************
         //*****************************Xếp phỏm cách 2 : Các cây A nếu được dùng trong dây đều đứng sau K******************************
@@ -397,7 +487,7 @@ public class CountPhomLogic {
             }
         }        
         
-        //Đếm và lưu các dây
+        //Đếm và lưu tạm các dây (chưa chính thức)
         ArrayList<ArrayList<Card>> straights2 = new ArrayList<>(); 
         boolean aceAdded = false;
         sortHandBySuitThenValue(hand);
@@ -478,32 +568,11 @@ public class CountPhomLogic {
             }
         }
         
-        // Tách dây to thành các dây nhỏ ( vd: 1,2,3,4,5,6 -> 1,2,3 và 4,5,6 )
-        Iterator<ArrayList<Card>> straights2Iter = straights2.listIterator();
-        ArrayList<ArrayList<Card>> straights2ToAdd = new ArrayList<>();
-        while(straights2Iter.hasNext())
-        {
-            ArrayList<Card> straight = straights2Iter.next();
-            Iterator<Card> straightIter = straight.listIterator();
-            while(straight.size()/3>1)
-            {
-                ArrayList<Card> tempStraight = new ArrayList<>();
-                for(int i=1;i<=3 && straightIter.hasNext();i++)
-                {
-                    Card cStraight = straightIter.next();
-                    tempStraight.add(cStraight);
-                    straightIter.remove();
-                }
-                straights2ToAdd.add(tempStraight);
-            }
-        }
-        straights2.addAll(straights2ToAdd);
-        
         //Tìm những lá bài đang được dùng chung cho cả dây và bộ và quyết định lá bài đó sẽ dùng cho dây hay bộ
         numberOfStraightsWillGetIfDeleteThisSet = 0;
         numberOfSetsWillGetIfDeleteThisStraight = 0;
         deleteStraight=false;
-        straights2Iter = straights2.listIterator();
+        Iterator<ArrayList<Card>> straights2Iter = straights2.listIterator();
         while(straights2Iter.hasNext())
         {
             ArrayList<Card> straight = straights2Iter.next();
@@ -573,11 +642,123 @@ public class CountPhomLogic {
             }
         } 
         
-        // Loại các phần tử thừa của dây ( vd: dây 1,3,4,5 sẽ bỏ 1 )
-        straights2Iter = straights2.listIterator();
-        while(straights2Iter.hasNext())
+        // Đếm và lưu dây lần 2 (chính thức)
+        copyHand = new ArrayList<>();
+        copyHand.addAll(hand);
+        for(ArrayList<Card> set : sets2)
         {
-            ArrayList<Card> straight = straights2Iter.next();
+            for(Card c : set)
+            {
+                removeThisCardFromThisHand(copyHand, c);
+            }
+        }
+        
+        ArrayList<ArrayList<Card>> straights2_official = new ArrayList<>();
+        aceAdded = false;
+        sortHandBySuitThenValue(copyHand);
+        currentValue = copyHand.get(0).getValue();
+        currentSuit = copyHand.get(0).getSuit();
+        currentStraightLength=1;
+        for(int i=1;i<copyHand.size();i++)
+        {
+            if(copyHand.get(i).getSuit()!=currentSuit || copyHand.get(i).getValue()!=currentValue+1)
+            {
+                if(currentStraightLength>=3)
+                {
+                    ArrayList<Card> straight = new ArrayList<>();
+                    for(int j=i-currentStraightLength;j<=i-1;j++)
+                    {
+                        straight.add(copyHand.get(j));
+                    }
+                    if(aceAdded)
+                    {
+                        straight.add(new Card(1,currentSuit));
+                        aceAdded = false;
+                    }
+                    straights2_official.add(straight);
+                }
+                currentValue = copyHand.get(i).getValue();
+                currentSuit = copyHand.get(i).getSuit();
+                currentStraightLength = 1;
+            }
+            if(copyHand.get(i).getValue()==currentValue+1 && copyHand.get(i).getSuit() == currentSuit)
+            {
+                if(currentValue==1)
+                {
+                    if(currentStraightLength>=3)
+                    {
+                        ArrayList<Card> straight = new ArrayList<>();
+                        for(int j=i-currentStraightLength;j<=i-1;j++)
+                        {
+                            straight.add(copyHand.get(j));
+                        }
+                        if(aceAdded)
+                        {
+                            straight.add(new Card(1,currentSuit));
+                            aceAdded = false;
+                        }
+                        straights2_official.add(straight);
+                    }
+                    currentValue = copyHand.get(i).getValue();
+                    currentSuit = copyHand.get(i).getSuit();
+                    currentStraightLength = 1;
+                }
+                else
+                {
+                    currentValue = copyHand.get(i).getValue();
+                    currentStraightLength++;
+                }
+            }
+            if(copyHand.get(i).getValue()==13 && thisHandContainsThisCard(copyHand, new Card(1,currentSuit)))
+            {
+                currentStraightLength++;
+                aceAdded = true;
+            }
+            if(i==copyHand.size()-1)
+            {
+                if(currentStraightLength>=3)
+                {
+                    ArrayList<Card> straight = new ArrayList<>();
+                    for(int j=i+1-currentStraightLength;j<=i;j++)
+                    {
+                        straight.add(copyHand.get(j));
+                    }
+                    if(aceAdded)
+                    {
+                        straight.add(new Card(1,currentSuit));
+                        aceAdded = false;
+                    }
+                    straights2_official.add(straight);
+                }
+            }
+        }
+        
+        // Tách dây to thành các dây nhỏ ( vd: 1,2,3,4,5,6 -> 1,2,3 và 4,5,6 )
+        Iterator<ArrayList<Card>> straights2_officialIter = straights2_official.listIterator();
+        ArrayList<ArrayList<Card>> straights2_officialToAdd = new ArrayList<>();
+        while(straights2_officialIter.hasNext())
+        {
+            ArrayList<Card> straight = straights2_officialIter.next();
+            Iterator<Card> straightIter = straight.listIterator();
+            while(straight.size()/3>1)
+            {
+                ArrayList<Card> tempStraight = new ArrayList<>();
+                for(int i=1;i<=3 && straightIter.hasNext();i++)
+                {
+                    Card cStraight = straightIter.next();
+                    tempStraight.add(cStraight);
+                    straightIter.remove();
+                }
+                straights2_officialToAdd.add(tempStraight);
+            }
+        }
+        straights2_official.addAll(straights2_officialToAdd);
+        
+        // Loại các phần tử thừa của dây ( vd: dây 1,3,4,5 sẽ bỏ 1 )
+        straights2_officialIter = straights2_official.listIterator();
+        while(straights2_officialIter.hasNext())
+        {
+            ArrayList<Card> straight = straights2_officialIter.next();
             Iterator<Card> straightIter = straight.listIterator();
             while(straightIter.hasNext())
             {
@@ -599,9 +780,9 @@ public class CountPhomLogic {
         }
         
         //Sắp xếp lại hand theo phỏm
-        if(straights1.size()+sets1.size()>=straights2.size()+sets2.size())
+        if(straights1_official.size()+sets1.size()>=straights2_official.size()+sets2.size())
         {
-            for(ArrayList<Card> straight : straights1)
+            for(ArrayList<Card> straight : straights1_official)
             {
                 System.out.println("Bạn có dây : ");
                 for(Card c : straight)
@@ -623,7 +804,7 @@ public class CountPhomLogic {
                 System.out.println("");
             }
 
-            for(ArrayList<Card> straight : straights1)
+            for(ArrayList<Card> straight : straights1_official)
             {
                 for(Card c : straight)
                 {
@@ -639,11 +820,11 @@ public class CountPhomLogic {
                 }
             }
         
-            return straights1.size()+sets1.size();
+            return straights1_official.size()+sets1.size();
         }
         else
         {
-            for(ArrayList<Card> straight : straights2)
+            for(ArrayList<Card> straight : straights2_official)
             {
                 System.out.println("Bạn có dây : ");
                 for(Card c : straight)
@@ -665,7 +846,7 @@ public class CountPhomLogic {
                 System.out.println("");
             }
 
-            for(ArrayList<Card> straight : straights2)
+            for(ArrayList<Card> straight : straights2_official)
             {
                 for(Card c : straight)
                 {
@@ -681,7 +862,7 @@ public class CountPhomLogic {
                 }
             }
         
-            return straights2.size()+sets2.size();
+            return straights2_official.size()+sets2.size();
         }
     }
     
